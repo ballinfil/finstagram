@@ -20,6 +20,15 @@ get '/signup' do     # if a user navigates to the path "/signup",
   erb(:signup)       # render "app/views/signup.erb"
 end
 
+get '/login' do
+  erb(:login)
+end
+
+get '/logout' do
+  session[:user_id] = nil
+  "Logout successful!"
+end
+
 post '/signup' do
 
   # grab user input values from params
@@ -29,9 +38,27 @@ post '/signup' do
   password   = params[:password]
 
   # instantiate and save a User
-  user = User.new({ email: email, avatar_url: avatar_url, username: username, password: password })
-  user.save
+  @user = User.new({ email: email, avatar_url: avatar_url, username: username, password: password })
 
-  # return readable representation of User object
-  escape_html user.inspect
+
+  if @user.save
+    "User #{username} saved!"
+  else
+    erb(:signup)  
+  end
+end
+
+post '/login' do
+  username = params[:username]
+  password = params[:password]
+
+  @user = User.find_by(username: username)
+
+  if @user && @user.password == password
+    session[:user_id] = @user.id
+    "Success! User with id #{session[:user_id]} is logged in!"
+  else
+    @error_message = "Login failed."
+    erb(:login)
+  end
 end
